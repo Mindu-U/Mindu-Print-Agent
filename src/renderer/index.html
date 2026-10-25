@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'">
+<title>Mindu Print</title><script src="theme.js"></script><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="app-header">
+  <div class="brand"><img src="../../assets/logo.png" alt="Mindu"><div><strong>mindu<span>print</span></strong><small data-t="Your website. Your printers."></small></div></div>
+  <div class="toolbar">
+    <div class="theme-switch" role="group" aria-label="Theme"><button type="button" data-theme-choice="light" aria-label="Light theme" data-icon="Sun"></button><button type="button" data-theme-choice="dark" aria-label="Dark theme" data-icon="Moon"></button></div>
+    <div class="language-control"><img id="language-flag" src="flags/en.svg" alt=""><select id="language" aria-label="Language"><option value="en">English</option><option value="ka">ქართული</option><option value="ru">Русский</option></select></div>
+  </div>
+</header>
+<main>
+  <section class="connection-card"><div class="connection-main"><span class="connection-icon" data-icon="Monitor"></span><div><span class="eyebrow" data-t="CONNECTION"></span><h1 id="connection-title">Connect to Mindu</h1><p id="connection-detail"></p></div></div><span class="badge" id="connection-badge"></span></section>
+  <section id="pairing" class="panel pairing-panel"><div class="pairing-art" aria-hidden="true"><span data-icon="Link"></span></div><h2 data-t="One connection. All your printers."></h2><p class="muted" data-t="Create a connection code in Mindu → Print stations, then paste it here."></p>
+    <form id="pair-form"><label for="name" data-t="Computer name"></label><input id="name" maxlength="80" required><label for="code" data-t="Connection code"></label><textarea id="code" rows="3" required autocomplete="off" spellcheck="false"></textarea><p id="server-preview" class="muted"></p><button class="primary" type="submit"><span data-t="Connect"></span><span data-icon="ArrowRight"></span></button></form>
+  </section>
+  <section id="connected" hidden>
+    <div class="section-title"><div class="heading"><span class="section-icon" data-icon="Printer"></span><div><h2 data-t="Printer assignments"></h2><p class="muted" data-t="Choose where each station prints."></p></div></div><button id="refresh" class="secondary"><span data-icon="RefreshCw"></span><span data-t="Refresh"></span></button></div>
+    <form id="routes-form"><div id="routes" class="routes"></div><div class="action-row"><span class="save-hint"><span data-icon="ShieldCheck"></span><span data-t="Print from Mindu. This app handles the rest."></span></span><button class="primary" type="submit"><span data-icon="Save"></span><span data-t="Save assignments"></span></button></div></form>
+    <section class="jobs panel"><div class="section-title"><div class="heading"><span class="section-icon" data-icon="Activity"></span><h2 data-t="Recent jobs"></h2></div><span class="muted" data-t="Windows queue status"></span></div><div id="jobs"></div></section>
+    <div class="preferences"><label class="checkbox"><input type="checkbox" id="startup"><span data-icon="Power"></span><span data-t="Start with Windows"></span></label><button id="disconnect" class="quiet"><span data-icon="Unplug"></span><span data-t="Disconnect"></span></button></div><p id="startup-note" class="muted"></p>
+  </section>
+  <p id="message" role="status" aria-live="polite"></p>
+  <footer><span data-icon="Monitor"></span><span data-t="Close this window to keep printing in the background. Quit from the tray to stop."></span></footer>
+</main><script src="i18n.js"></script><script src="icons.js"></script><script src="app.js"></script></body></html>

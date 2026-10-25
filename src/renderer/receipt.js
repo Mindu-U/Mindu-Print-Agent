@@ -1,0 +1,1 @@
+if (new URLSearchParams(location.search).get('width') === '58') document.documentElement.classList.add('narrow');
