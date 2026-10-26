@@ -35,10 +35,10 @@ class Connector {
     const stations=new Set(this.store.state.stations.map(s=>s._id)),seen=new Set(),printers=await this.printers();
     if(!Array.isArray(routes)||routes.length>21)throw new Error('Invalid printer assignments');
     for(const r of routes){
-      if(!stations.has(r.station)||seen.has(r.station)||!printers.some(p=>p.name===r.printer)||![58,80].includes(r.width))throw new Error('Choose an available printer for each station.');
+      if(!stations.has(r.station)||seen.has(r.station)||!printers.some(p=>p.name===r.printer)||(![58,80].includes(r.width)||!['windows','escpos'].includes(r.mode||'windows')))throw new Error('Choose an available printer for each station.');
       seen.add(r.station);
     }
-    this.store.state.routes=routes.map(({station,printer,width})=>({station,printer,width}));
+    this.store.state.routes=routes.map(({station,printer,width,mode})=>({station,printer,width,mode:mode||'windows'}));
     await this.store.save();await this.tick();
   }
   async tick() {
@@ -63,7 +63,7 @@ class Connector {
       await this.store.save(); // Durable marker BEFORE handing anything to Windows.
       try {
         if(!printers.some(p=>p.name===job.printer)){entry.status='failed';entry.message='Assigned printer unavailable';}
-        else { await this.print(job);entry.status='submitted';entry.message='Sent to Windows print queue'; }
+        else { await this.print({...job,mode:this.store.state.routes.find(r=>r.station===job.station&&r.printer===job.printer)?.mode||'windows'});entry.status='submitted';entry.message='Sent to Windows print queue'; }
       } catch(error) {entry.status='unknown';entry.message=String(error.message).slice(0,300);}
       await this.store.save();
       await request(c,'/jobs/'+entry.id+'/ack',{status:entry.status,message:entry.message});

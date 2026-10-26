@@ -90,3 +90,6 @@ window.words={
     "Language": "Язык"
   }
 };
+Object.assign(window.words.en,{'Print mode':'Print mode','Windows driver':'Windows driver','ESC/POS receipt':'ESC/POS receipt'});
+Object.assign(window.words.ka,{'Print mode':'ბეჭდვის რეჟიმი','Windows driver':'Windows დრაივერი','ESC/POS receipt':'ESC/POS ქვითარი'});
+Object.assign(window.words.ru,{'Print mode':'Режим печати','Windows driver':'Драйвер Windows','ESC/POS receipt':'Чек ESC/POS'});

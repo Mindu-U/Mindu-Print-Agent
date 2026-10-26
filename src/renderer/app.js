@@ -22,8 +22,10 @@ function renderRoutes(state){
   select.value=route?.printer||'';label.append(caption,select);
   const widthLabel=document.createElement('label'),widthCaption=document.createElement('span');widthCaption.textContent=tx('Paper');
   const width=document.createElement('select');width.className='width';width.setAttribute('aria-label',tx('Paper')+' · '+name.textContent);width.add(new Option('80 mm','80'));width.add(new Option('58 mm','58'));width.value=route?.width||80;widthLabel.append(widthCaption,width);
-  const test=document.createElement('button');test.type='button';test.className='secondary';test.append(window.icon('Printer'),document.createTextNode(tx('Test')));test.setAttribute('aria-label',tx('Test')+' · '+name.textContent);test.onclick=()=>action(async()=>{await window.mindu.test({printer:select.value,width:Number(width.value)});message(tx('Sent to Windows. Check the receipt.'));});
-  row.append(stationName,label,widthLabel,test);$('routes').append(row);
+  const modeLabel=document.createElement('label'),modeCaption=document.createElement('span');modeCaption.textContent=tx('Print mode');
+  const mode=document.createElement('select');mode.className='mode';mode.setAttribute('aria-label',tx('Print mode')+' · '+name.textContent);mode.add(new Option(tx('Windows driver'),'windows'));mode.add(new Option(tx('ESC/POS receipt'),'escpos'));mode.value=route?.mode||'windows';modeLabel.append(modeCaption,mode);
+  const test=document.createElement('button');test.type='button';test.className='secondary';test.append(window.icon('Printer'),document.createTextNode(tx('Test')));test.setAttribute('aria-label',tx('Test')+' · '+name.textContent);test.onclick=()=>action(async()=>{await window.mindu.test({printer:select.value,width:Number(width.value),mode:mode.value});message(tx('Sent to Windows. Check the receipt.'));});
+  row.append(stationName,label,widthLabel,modeLabel,test);$('routes').append(row);
  }
 }
 function renderJobs(jobs){
@@ -49,7 +51,7 @@ async function refresh(){
 $('code').addEventListener('input',async()=>{try{$('server-preview').textContent=await window.mindu.inspect($('code').value);}catch{$('server-preview').textContent='';}});
 $('pair-form').onsubmit=e=>{e.preventDefault();action(async()=>{await window.mindu.pair($('code').value,$('name').value);$('code').value='';signature='';message(tx('Connected'));});};
 $('routes-form').onsubmit=e=>{e.preventDefault();action(async()=>{
- const rows=[...document.querySelectorAll('.route')].map(row=>({station:row.dataset.station,printer:row.querySelector('.printer').value,width:Number(row.querySelector('.width').value)})).filter(r=>r.printer);
+ const rows=[...document.querySelectorAll('.route')].map(row=>({station:row.dataset.station,printer:row.querySelector('.printer').value,width:Number(row.querySelector('.width').value),mode:row.querySelector('.mode').value})).filter(r=>r.printer);
  await window.mindu.routes(rows);message(tx('Assignments saved'));
 });};
 $('refresh').onclick=()=>action(async()=>{signature='';await refresh();});

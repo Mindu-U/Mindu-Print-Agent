@@ -1,3 +1,4 @@
+const {raster,receipt,sendRaw}=require('./escpos.cjs');
 const path=require('node:path');
 const {pathToFileURL}=require('node:url');
 function validateDocument(doc){
@@ -10,7 +11,7 @@ function validateDocument(doc){
   if(JSON.stringify(doc).length>64000)throw new Error('Ticket too large');
   return doc;
 }
-function createPrinter({BrowserWindow,ipcMain}) {
+function createPrinter({BrowserWindow,ipcMain,nativeImage,rawSender=sendRaw}) {
   const payloads=new Map();
   const ticketPath=path.join(__dirname,'../renderer/ticket.html'),ticketUrl=pathToFileURL(ticketPath).href;
   ipcMain.handle('ticket:read',event=>{
@@ -21,7 +22,9 @@ function createPrinter({BrowserWindow,ipcMain}) {
   return async function print(job){
     if(![58,80].includes(job.width)||typeof job.printer!=='string'||!job.printer)throw new Error('Invalid printer');
     validateDocument(job.document);
-    const ticket=new BrowserWindow({show:false,webPreferences:{preload:path.join(__dirname,'../preload/ticket.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false}});
+    const mode=job.mode||'windows';
+    if(!['windows','escpos'].includes(mode))throw new Error('Unsupported print mode');
+    const ticket=new BrowserWindow({show:false,width:Math.ceil(job.width*96/25.4),height:512,useContentSize:true,backgroundColor:'#ffffff',webPreferences:{offscreen:mode==='escpos'?{deviceScaleFactor:2}:false,backgroundThrottling:false,preload:path.join(__dirname,'../preload/ticket.cjs'),sandbox:true,contextIsolation:true,nodeIntegration:false}});
     ticket.webContents.setWindowOpenHandler(()=>({action:'deny'}));
     ticket.webContents.on('will-navigate',e=>e.preventDefault());
     payloads.set(ticket.webContents.id,{width:job.width,document:job.document});
@@ -29,6 +32,21 @@ function createPrinter({BrowserWindow,ipcMain}) {
       await ticket.loadFile(ticketPath);
       const height=await ticket.webContents.executeJavaScript('window.ticketReady.then(() => document.fonts.ready).then(() => Math.ceil(document.documentElement.getBoundingClientRect().height))');
       if(!Number.isFinite(height)||height<1||height>18000)throw new Error('Unsupported ticket height');
+      if(mode==='escpos'){
+        const width=job.width===80?576:384,cssWidth=Math.ceil(job.width*96/25.4),bands=[];
+        await ticket.webContents.executeJavaScript("document.documentElement.style.paddingBottom='512px'");
+        for(let y=0;y<height;y+=256){
+          const rows=Math.min(256,height-y);
+          await ticket.webContents.executeJavaScript(`window.scrollTo(0,${y});new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))`);
+          const capture=await ticket.webContents.capturePage({x:0,y:0,width:cssWidth,height:rows},{stayHidden:true,stayAwake:true});
+          if(capture.isEmpty())throw new Error('Receipt image is empty');
+          const pixelHeight=Math.round((y+rows)*width/cssWidth)-Math.round(y*width/cssWidth);
+          const image=nativeImage.createFromBuffer(capture.toPNG()).resize({width,height:pixelHeight,quality:'best'});
+          bands.push(raster(image.toBitmap({scaleFactor:1}),width,pixelHeight));
+        }
+        await rawSender(job.printer,receipt(bands,width));
+        return;
+      }
       await new Promise((resolve,reject)=>{
         const timer=setTimeout(()=>reject(new Error('Printer response uncertain. Check Windows queue before reprinting.')),45000);
         try{ticket.webContents.print({silent:true,deviceName:job.printer,printBackground:true,color:false,copies:1,margins:{marginType:'none'},pageSize:{width:job.width*1000,height:Math.max(40000,Math.ceil(height*25400/96)+2000)}},(ok,message)=>{

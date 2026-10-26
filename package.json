@@ -1,7 +1,7 @@
 {
   "name": "mindu-print",
   "productName": "Mindu Print",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Mindu website-to-printer connection",
   "author": "Mindu Team",
@@ -37,6 +37,9 @@
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true
-    }
+    },
+    "asarUnpack": [
+      "src/main/raw-print.ps1"
+    ]
   }
 }

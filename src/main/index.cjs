@@ -27,7 +27,7 @@ else{
   window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',e=>e.preventDefault());
   window.on('close',e=>{if(!quitting&&tray){e.preventDefault();window.hide();}});
   const printers=async()=>(await window.webContents.getPrintersAsync()).map(p=>({name:p.name,displayName:p.displayName||p.name}));
-  const print=createPrinter({BrowserWindow,ipcMain});connector=new Connector(store,printers,print);
+  const print=createPrinter({BrowserWindow,ipcMain,nativeImage});connector=new Connector(store,printers,print);
   handle('agent:status',async()=>({
     connected:!!store.state.connection,online:connector.online,error:connector.error,
     server:store.state.connection?.server||'',name:store.state.connection?.name||os.hostname(),
@@ -41,7 +41,7 @@ else{
   handle('agent:routes',routes=>connector.run(()=>connector.routes(routes)));
   handle('agent:test',selection=>connector.run(async()=>{
     if(!(await printers()).some(p=>p.name===selection?.printer))throw new Error('Printer unavailable');
-    await print({printer:selection.printer,width:selection.width,document:testDocument});
+    await print({printer:selection.printer,width:selection.width,mode:selection.mode,document:testDocument});
   }));
   handle('agent:language',lang=>connector.run(async()=>{
     if(!['en','ka','ru'].includes(lang))throw new Error('Unsupported language');
